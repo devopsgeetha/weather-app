@@ -20,6 +20,14 @@ jobs:
           # Fetch depth 0 to get full history for better context
           fetch-depth: 0
       
+      - name: Debug PR Info
+        run: |
+          echo "PR Number: ${{ github.event.pull_request.number }}"
+          echo "PR Head SHA: ${{ github.event.pull_request.head.sha }}"
+          echo "PR Head Repo: ${{ github.event.pull_request.head.repo.full_name }}"
+          echo "PR Base Repo: ${{ github.repository }}"
+          cat ${{ github.event_path }} | ConvertFrom-Json | ConvertTo-Json -Depth 10
+      
       - name: AI PR Review
         uses: meetgeetha/pr-reviewer-action@v1
         with:
