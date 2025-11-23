@@ -1,7 +1,7 @@
 name: Test PR Reviewer Action
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 jobs:
@@ -12,8 +12,13 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - name: Checkout code
+      - name: Checkout PR code
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          # Fetch depth 0 to get full history for better context
+          fetch-depth: 0
       
       - name: AI PR Review
         uses: ./

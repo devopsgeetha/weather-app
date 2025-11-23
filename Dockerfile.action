@@ -1,0 +1,26 @@
+FROM python:3.11-slim
+
+# Install git and curl for GitHub API interactions
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY requirements-action.txt /app/requirements-action.txt
+RUN pip install --no-cache-dir -r requirements-action.txt
+
+# Copy action scripts
+COPY entrypoint.sh /app/entrypoint.sh
+COPY review_pr.py /app/review_pr.py
+
+# Make entrypoint executable
+RUN chmod +x /app/entrypoint.sh
+
+# Set entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
+
