@@ -1,6 +1,6 @@
 # 🌤️ Weather App
 
-A beautiful, modern Python web application to display real-time weather conditions for any place on Earth. Built with Flask and featuring a responsive, gradient-based UI.
+A beautiful, modern and modern Python web application to display the real-time weather conditions for any place on the Earth. Built with Flask and featuring a responsive, gradient-based UI.
 
 ## ✨ Features
 
