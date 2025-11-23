@@ -26,7 +26,9 @@ jobs:
           echo "PR Head SHA: ${{ github.event.pull_request.head.sha }}"
           echo "PR Head Repo: ${{ github.event.pull_request.head.repo.full_name }}"
           echo "PR Base Repo: ${{ github.repository }}"
-          cat ${{ github.event_path }} | ConvertFrom-Json | ConvertTo-Json -Depth 10
+          echo "Event Path: ${{ github.event_path }}"
+          echo "--- Event JSON (first 2000 chars) ---"
+          head -c 2000 ${{ github.event_path }} || cat ${{ github.event_path }} | head -c 2000
       
       - name: AI PR Review
         uses: meetgeetha/pr-reviewer-action@v1
