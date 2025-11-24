@@ -33,6 +33,8 @@ DEFAULT_CITIES = [
     {'name': 'Beijing', 'state': '', 'country': 'CN'},
     {'name': 'Tokyo', 'state': '', 'country': 'JP'},
     {'name': 'Budapest', 'state': '', 'country': 'HU'},
+    {'name': 'Phuket', 'state': '', 'country': 'TH'},
+    {'name': 'Dubai', 'state': '', 'country': 'AE'},
 ]
 
 
