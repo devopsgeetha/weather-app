@@ -1,0 +1,27 @@
+name: AI Code Review (Agentic)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          fetch-depth: 0
+      
+      - name: AI PR Review (Agentic)
+        uses: meetgeetha/pr-reviewer-action@AGENTIC_AI  # Use AGENTIC_AI branch
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          openai_model: gpt-4-turbo-preview  # Recommended for agentic mode
