@@ -1,0 +1,78 @@
+:root{
+  --glass-bg: rgba(255,255,255,0.9);
+  --accent: rgba(255,255,255,0.12);
+  --page-bg: linear-gradient(120deg,#0f172a 0%, #082032 50%, #01303f 100%);
+}
+
+*{box-sizing:border-box}
+
+body{
+  min-height:100vh;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--page-bg);
+  color: #e6eef8;
+}
+
+/* Animated hero gradient */
+.hero{
+  background: linear-gradient(135deg, rgba(3,37,65,0.9), rgba(5,52,85,0.85));
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease infinite;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+@keyframes gradientShift{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+/* Glass card */
+.card.glass{
+  background: rgba(255,255,255,0.9);
+  border-radius: 12px;
+  backdrop-filter: blur(6px) saturate(120%);
+  color: #0b1220;
+}
+
+/* City cards */
+.city-card{
+  transition: transform .18s ease, box-shadow .18s ease;
+  cursor: pointer;
+}
+.city-card:hover, .city-card:focus{
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(2,6,23,0.6);
+  outline: none;
+}
+
+/* Grid responsiveness */
+#citiesGrid .col{
+  display:flex;
+}
+
+/* Small utility */
+.text-muted{opacity:0.8}
+
+/* Loading skeleton */
+.skeleton{
+  height: 80px;
+  border-radius: 8px;
+  background: linear-gradient(90deg,#e6eef8 10%, #f7fbff 50%, #e6eef8 90%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer{
+  0%{background-position:-200% 0}
+  100%{background-position:200% 0}
+}
+
+/* Modal glass variant */
+.modal-content.glass{
+  background: rgba(255,255,255,0.95);
+}
+
+/* Unit toggle */
+.form-check-input {
+  cursor: pointer;
+}

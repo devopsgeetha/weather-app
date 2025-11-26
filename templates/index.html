@@ -1,160 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Weather Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap 5 CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Weather Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.9/css/weather-icons.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #87ceeb 0%, #f0fff0 100%);
-            min-height: 100vh;
-            font-family: 'Inter', sans-serif;
-        }
-        .weather-card {
-            background: rgba(255,255,255,0.9);
-            border-radius: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-            transition: box-shadow .2s;
-        }
-        .weather-card:hover {
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.15);
-        }
-        .weather-icon {
-            font-size: 3rem;
-        }
-        .city-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        .card-details {
-            font-size: 1.1rem;
-        }
-        .error-card {
-            border: 1px solid #e74c3c;
-            background: #fdecea;
-            color: #e74c3c;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Weather App</title>
+
+  <meta name="theme-color" content="#01303f" />
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+
+  <!-- Bootstrap 5 CSS (CDN) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet" integrity="" crossorigin="anonymous">
+  <!-- Icons (optional) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <!-- Custom styles -->
+  <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-5">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="wi wi-day-sunny"></i> Weather Dashboard
-            </a>
-        </div>
-    </nav>
+  <header class="hero py-5 text-white">
     <div class="container">
-        <div class="mb-4">
-            <form class="row g-2" id="searchForm">
-                <div class="col-sm-4">
-                    <input type="text" id="searchCity" class="form-control" placeholder="City Name" required>
+      <div class="d-flex align-items-center justify-content-between">
+        <h1 class="h3 mb-0">Weather App</h1>
+        <form id="searchForm" class="d-flex" role="search" aria-label="Search weather">
+          <input id="searchCity" class="form-control me-2" type="search" placeholder="City, State?, Country?" aria-label="Search" />
+          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+        </form>
+      </div>
+
+      <div class="row mt-4 align-items-center">
+        <div class="col-lg-6">
+          <div class="d-flex align-items-center gap-3">
+            <div class="form-check form-switch text-white">
+              <input class="form-check-input" type="checkbox" id="unitToggle" aria-label="Toggle Celsius Fahrenheit">
+              <label class="form-check-label" for="unitToggle" id="unitLabel">°F</label>
+            </div>
+            <small class="text-white-50">Toggle units (persists in browser). Default: °F</small>
+          </div>
+
+          <div id="featuredCard" class="card glass text-dark p-3 shadow-sm d-none mt-3" aria-live="polite">
+            <div class="d-flex align-items-center">
+              <div class="me-3 text-center">
+                <img id="featuredIcon" src="" alt="weather icon" width="96" height="96" loading="lazy"/>
+              </div>
+              <div>
+                <h2 id="featuredCity" class="mb-0"></h2>
+                <p id="featuredDesc" class="mb-0 text-muted"></p>
+                <div class="d-flex gap-3 mt-2">
+                  <div><strong id="featuredTemp"></strong>°</div>
+                  <div class="text-muted">Feels: <span id="featuredFeels"></span>°</div>
                 </div>
-                <div class="col-sm-2">
-                    <input type="text" id="searchState" class="form-control" placeholder="State (optional)">
-                </div>
-                <div class="col-sm-2">
-                    <input type="text" id="searchCountry" class="form-control" placeholder="Country (optional)">
-                </div>
-                <div class="col-sm-2">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="wi wi-search"></i> Search
-                    </button>
-                </div>
-            </form>
+              </div>
+            </div>
+            <div class="row mt-3 small text-muted">
+              <div class="col">Humidity: <span id="featuredHumidity"></span>%</div>
+              <div class="col">Wind: <span id="featuredWind"></span> mph</div>
+              <div class="col">Visibility: <span id="featuredVisibility"></span> km</div>
+            </div>
+          </div>
+
+          <div id="searchFeedback" class="alert alert-warning d-none mt-3" role="alert"></div>
         </div>
-        <div id="weatherResults" class="row"></div>
-        <h3 class="mt-5 mb-3">Default Cities</h3>
-        <div id="citiesWeather" class="row"></div>
+
+        <div class="col-lg-6 text-lg-end mt-3 mt-lg-0">
+          <small class="d-block text-white-50">Tip: search "Fremont, CA, US" or "Chennai, IN"</small>
+        </div>
+      </div>
     </div>
-    <footer class="text-center py-4 mt-5 bg-transparent">
-        <span class="text-muted">Powered by OpenWeatherMap · Weather App Example</span>
-    </footer>
-    <script>
-        // Icon conversion: OpenWeatherMap icon code => Weather Icons class
-        function getIconClass(iconCode) {
-            // Day/Night detection
-            let base = iconCode.endsWith('d') ? 'day' : 'night';
-            // Mapping (simple, most common)
-            const codeMap = {
-                '01': 'sunny',
-                '02': 'cloudy',
-                '03': 'cloud',
-                '04': 'cloudy',
-                '09': 'showers',
-                '10': 'rain',
-                '11': 'thunderstorm',
-                '13': 'snow',
-                '50': 'fog'
-            };
-            let pre = iconCode.substring(0, 2);
-            let wiClass = 'wi wi-' + base + '-' + (codeMap[pre] || 'cloud');
-            return wiClass;
-        }
+  </header>
 
-        function renderWeatherCard(data, colClass='col-md-4') {
-            if (data.error) {
-                return `<div class="col-12"><div class="weather-card error-card p-3 mb-3">
-                    <strong>Error for ${data.city || 'City'}:</strong> ${data.error}
-                </div></div>`;
-            }
-            const iconClass = getIconClass(data.icon);
-            return `<div class="${colClass}">
-                <div class="weather-card shadow-sm p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="city-title">${data.city}, ${data.country}</span>
-                        <i class="${iconClass} weather-icon"></i>
-                    </div>
-                    <div class="card-details mb-2">
-                        <span class="badge bg-info text-dark">${data.description}</span>
-                        <div>🌡 Temperature: <strong>${data.temperature}°F</strong></div>
-                        <div>🤗 Feels like: ${data.feels_like}°F</div>
-                        <div>💧 Humidity: ${data.humidity}%</div>
-                        <div>💨 Wind: ${data.wind_speed} mph</div>
-                        <div>📊 Pressure: ${data.pressure} hPa</div>
-                        <div>👀 Visibility: ${data.visibility} mi</div>
-                    </div>
-                </div>
-            </div>`;
-        }
+  <main class="container my-5" id="mainContent">
+    <h2 class="h5 mb-3">Default Cities</h2>
+    <div id="citiesGrid" class="row g-3" aria-live="polite">
+      <!-- Cards injected by JS -->
+    </div>
+  </main>
 
-        // Show weather for searched city
-        document.getElementById('searchForm').onsubmit = function(e) {
-            e.preventDefault();
-            let city = document.getElementById('searchCity').value;
-            let state = document.getElementById('searchState').value;
-            let country = document.getElementById('searchCountry').value;
-            let results = document.getElementById('weatherResults');
-            results.innerHTML = `<div class="col-12 text-center"><div class="spinner-border text-primary my-4" role="status"></div><span>Loading…</span></div>`;
-            fetch(`/api/weather?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&country=${encodeURIComponent(country)}`)
-                .then(r=>r.json())
-                .then(data => {
-                    results.innerHTML = renderWeatherCard(data, 'col-md-6 offset-md-3');
-                })
-                .catch(() => {
-                    results.innerHTML = `<div class="col-12"><div class="weather-card error-card p-3 mb-3">Failed to load weather data.</div></div>`;
-                });
-        };
+  <!-- Detail Modal -->
+  <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content glass">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalTitle"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row align-items-center">
+            <div class="col-md-4 text-center">
+              <img id="modalIcon" src="" alt="icon" width="120" height="120" loading="lazy">
+              <p id="modalDesc" class="lead mt-2"></p>
+            </div>
+            <div class="col-md-8">
+              <ul class="list-unstyled mb-0">
+                <li><strong>Temperature:</strong> <span id="modalTemp"></span> ° (<span id="modalFeels"></span>° feels like)</li>
+                <li><strong>Humidity:</strong> <span id="modalHumidity"></span>%</li>
+                <li><strong>Wind:</strong> <span id="modalWind"></span> mph</li>
+                <li><strong>Pressure:</strong> <span id="modalPressure"></span> hPa</li>
+                <li><strong>Visibility:</strong> <span id="modalVisibility"></span> km</li>
+                <li><strong>Sunrise / Sunset:</strong> <span id="modalSunrise"></span> / <span id="modalSunset"></span></li>
+                <li><strong>Timezone offset:</strong> <span id="modalTZ"></span> seconds</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        // Show weather cards for default cities
-        function loadCitiesWeather() {
-            let holder = document.getElementById('citiesWeather');
-            holder.innerHTML = `<div class="col-12 text-center"><div class="spinner-border text-primary my-4" role="status"></div><span>Loading…</span></div>`;
-            fetch('/api/cities').then(r=>r.json()).then(data => {
-                holder.innerHTML = data.map(city =>
-                    renderWeatherCard(city)
-                ).join('');
-            });
-        }
-        window.onload = loadCitiesWeather;
-    </script>
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JS & dependencies (deferred) -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  <!-- Main JS -->
+  <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
