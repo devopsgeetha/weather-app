@@ -4,6 +4,8 @@
   --page-bg: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 50%, #f0f4f8 100%);
   --text-primary: #1e293b;
   --text-secondary: #64748b;
+  --umbrella-needed: #3b82f6;
+  --umbrella-not-needed: #94a3b8;
 }
 
 *{box-sizing:border-box}
