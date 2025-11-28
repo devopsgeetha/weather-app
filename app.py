@@ -81,7 +81,7 @@ elif len(WEATHER_API_KEY) < 20:
 DEFAULT_CITIES = [
     {'name': 'Fremont', 'state': 'CA', 'country': 'US'},
     {'name': 'New York', 'state': 'NY', 'country': 'US'},
-    {'name': 'Los Angeles', 'state': 'CA', 'country': 'US'},
+    {'name': 'Thanjavur', 'state': 'Tamil Nadu', 'country': 'IN'},
     {'name': 'Chennai', 'state': 'Tamil Nadu', 'country': 'IN'},
     {'name': 'Beijing', 'state': '', 'country': 'CN'},
     {'name': 'Tokyo', 'state': '', 'country': 'JP'},
