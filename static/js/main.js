@@ -73,13 +73,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const sunriseTime = sunrise.includes(',') ? sunrise.split(',')[1].trim() : sunrise;
     const sunsetTime = sunset.includes(',') ? sunset.split(',')[1].trim() : sunset;
     
+    // Umbrella indicator
+    const needsUmbrella = w.needs_umbrella === true || w.needs_umbrella === 'true' || (w.rain_amount && w.rain_amount > 0);
+    const umbrellaIcon = needsUmbrella 
+      ? '<i class="fa-solid fa-umbrella" style="font-size: 1.1rem; color: #3b82f6;" title="Umbrella needed - Rain expected"></i>'
+      : '<i class="fa-solid fa-umbrella" style="font-size: 1.1rem; color: #94a3b8; opacity: 0.4;" title="No umbrella needed - No rain expected"></i>';
+    
     card.innerHTML = `
       <div class="city-card-header">
         <div class="d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center">
             <img src="${icon}" alt="${w.description || ''}" width="40" height="40" class="me-2" loading="lazy">
             <div>
-              <h5 class="mb-0">${w.city}</h5>
+              <h5 class="mb-0 d-flex align-items-center gap-2">
+                ${w.city}
+                ${umbrellaIcon}
+              </h5>
               <div class="text-muted" style="font-size: 0.7rem; line-height: 1.1;">${w.country} • ${w.description}</div>
             </div>
           </div>
@@ -117,6 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="detail-row">
           <span class="detail-label">Sunset</span>
           <span class="detail-value" style="font-size: 0.7rem;">${sunsetTime}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Rain</span>
+          <span class="detail-value">${w.rain_amount || 0} mm</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">TZ</span>

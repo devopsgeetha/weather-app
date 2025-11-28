@@ -131,6 +131,15 @@ def get_weather_data(city_name, state='', country=''):
         response.raise_for_status()
         data = response.json()
 
+        # Check for rain/precipitation
+        weather_id = data['weather'][0].get('id', 0) if data.get('weather') else 0
+        rain_amount = data.get('rain', {}).get('1h', 0) or data.get('rain', {}).get('3h', 0) or 0
+        
+        # Determine if umbrella is needed
+        # Weather IDs 500-531 indicate rain/drizzle/thunderstorm
+        # Also check if there's actual rain amount
+        needs_umbrella = (weather_id >= 500 and weather_id < 600) or rain_amount > 0
+        
         # Format the response
         weather_info = {
             'city': data.get('name', city_name),
@@ -145,7 +154,9 @@ def get_weather_data(city_name, state='', country=''):
             'visibility': round(data.get('visibility', 0) / 1000, 1) if data.get('visibility') else 'N/A',
             'sunrise': data.get('sys', {}).get('sunrise'),
             'sunset': data.get('sys', {}).get('sunset'),
-            'timezone': data.get('timezone', 0)
+            'timezone': data.get('timezone', 0),
+            'rain_amount': round(rain_amount, 1) if rain_amount else 0,
+            'needs_umbrella': needs_umbrella
         }
 
         # Cache only successful formatted response
