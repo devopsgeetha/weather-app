@@ -34,6 +34,9 @@ body{
   backdrop-filter: blur(6px) saturate(120%);
   color: #0b1220;
 }
+.card.glass * {
+  color: inherit;
+}
 
 /* City cards */
 .city-card{
@@ -44,6 +47,32 @@ body{
   transform: translateY(-6px);
   box-shadow: 0 12px 30px rgba(2,6,23,0.6);
   outline: none;
+  background: rgba(255,255,255,0.95) !important;
+  color: #0b1220 !important;
+}
+.city-card:active, .city-card:focus-visible{
+  background: rgba(255,255,255,0.95) !important;
+  color: #0b1220 !important;
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+.city-card:active *, .city-card:focus *, .city-card:focus-visible * {
+  color: #0b1220 !important;
+}
+/* Ensure text remains visible in all states */
+.city-card.glass h5,
+.city-card.glass .text-muted,
+.city-card.glass .fs-4,
+.city-card.glass .small {
+  color: inherit;
+}
+.city-card.glass .text-muted {
+  color: rgba(11, 18, 32, 0.7) !important;
+}
+.city-card:focus .text-muted,
+.city-card:active .text-muted,
+.city-card:focus-visible .text-muted {
+  color: rgba(11, 18, 32, 0.7) !important;
 }
 
 /* Grid responsiveness */
