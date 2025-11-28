@@ -61,17 +61,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // provide a fallback if icon missing
     const icon = w.icon ? iconUrl(w.icon) : '';
+    
+    // Format sunrise/sunset
+    const sunrise = formatTime(w.sunrise, w.timezone);
+    const sunset = formatTime(w.sunset, w.timezone);
+    
+    // Format visibility
+    const visibility = (typeof w.visibility === 'number') ? w.visibility : (w.visibility || 'N/A');
 
+    // Shorten sunrise/sunset to just time
+    const sunriseTime = sunrise.includes(',') ? sunrise.split(',')[1].trim() : sunrise;
+    const sunsetTime = sunset.includes(',') ? sunset.split(',')[1].trim() : sunset;
+    
     card.innerHTML = `
-      <div class="d-flex align-items-center">
-        <img src="${icon}" alt="${w.description || ''}" width="64" height="64" class="me-3" loading="lazy">
-        <div class="flex-grow-1">
-          <h5 class="mb-0">${w.city}, ${w.country}</h5>
-          <div class="small text-muted">${w.description}</div>
+      <div class="city-card-header">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <img src="${icon}" alt="${w.description || ''}" width="40" height="40" class="me-2" loading="lazy">
+            <div>
+              <h5 class="mb-0">${w.city}</h5>
+              <div class="text-muted" style="font-size: 0.7rem; line-height: 1.1;">${w.country} • ${w.description}</div>
+            </div>
+          </div>
+          <div class="text-end">
+            <div class="display-6 fw-bold mb-0">${w.temperature}°</div>
+            <div class="text-muted" style="font-size: 0.65rem;">Feels ${w.feels_like}°</div>
+          </div>
         </div>
-        <div class="text-end">
-          <div class="fs-4">${w.temperature}°</div>
-          <div class="small text-muted">Feels ${w.feels_like}°</div>
+      </div>
+      <div class="city-card-details">
+        <div class="detail-row">
+          <span class="detail-label">Temp</span>
+          <span class="detail-value">${w.temperature}° (${w.feels_like}°)</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Humidity</span>
+          <span class="detail-value">${w.humidity || 'N/A'}%</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Wind</span>
+          <span class="detail-value">${w.wind_speed || 'N/A'} mph</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Pressure</span>
+          <span class="detail-value">${w.pressure || 'N/A'} hPa</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Visibility</span>
+          <span class="detail-value">${visibility} km</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Sunrise</span>
+          <span class="detail-value" style="font-size: 0.7rem;">${sunriseTime}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Sunset</span>
+          <span class="detail-value" style="font-size: 0.7rem;">${sunsetTime}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">TZ</span>
+          <span class="detail-value">${w.timezone || 0}s</span>
         </div>
       </div>
     `;

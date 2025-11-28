@@ -1,7 +1,9 @@
 :root{
-  --glass-bg: rgba(255,255,255,0.9);
-  --accent: rgba(255,255,255,0.12);
-  --page-bg: linear-gradient(120deg,#0f172a 0%, #082032 50%, #01303f 100%);
+  --glass-bg: rgba(255,255,255,0.95);
+  --accent: rgba(99, 102, 241, 0.1);
+  --page-bg: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 50%, #f0f4f8 100%);
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
 }
 
 *{box-sizing:border-box}
@@ -10,15 +12,14 @@ body{
   min-height:100vh;
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   background: var(--page-bg);
-  color: #e6eef8;
+  color: var(--text-primary);
 }
 
-/* Animated hero gradient */
+/* Modern hero gradient */
 .hero{
-  background: linear-gradient(135deg, rgba(3,37,65,0.9), rgba(5,52,85,0.85));
-  background-size: 400% 400%;
-  animation: gradientShift 12s ease infinite;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes gradientShift{
@@ -29,55 +30,180 @@ body{
 
 /* Glass card */
 .card.glass{
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.95);
   border-radius: 12px;
-  backdrop-filter: blur(6px) saturate(120%);
-  color: #0b1220;
+  backdrop-filter: blur(10px) saturate(180%);
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 .card.glass * {
   color: inherit;
 }
 
-/* City cards */
-.city-card{
-  transition: transform .18s ease, box-shadow .18s ease;
+/* Override Bootstrap button styles for cards with button role */
+.card[role="button"],
+.card.city-card[role="button"] {
+  background: rgba(255,255,255,0.9) !important;
+  color: #0b1220 !important;
+  border: none !important;
+}
+
+/* City cards - ensure proper contrast in all states */
+.city-card,
+.card.city-card,
+.card.city-card.glass {
+  transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, color .18s ease;
   cursor: pointer;
+  background: rgba(255,255,255,0.95) !important;
+  background-color: rgba(255,255,255,0.95) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  min-height: auto;
 }
-.city-card:hover, .city-card:focus{
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(2,6,23,0.6);
+/* Modern city card styling - ultra compact */
+.city-card {
+  padding: 0.75rem !important;
+  border-radius: 12px !important;
+  background: rgba(255,255,255,0.95) !important;
+  backdrop-filter: blur(10px) saturate(180%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.city-card-header {
+  border-bottom: 1px solid rgba(30, 41, 59, 0.08);
+  padding-bottom: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+
+.city-card-header h5 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  margin-bottom: 0.0625rem;
+  line-height: 1.2;
+}
+
+.city-card-header .display-6 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.city-card-header img {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.city-card-details {
+  margin-top: 0.375rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  padding: 0.125rem 0;
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
+.detail-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+
+.detail-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.city-card .small {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  line-height: 1.1;
+}
+
+.city-card .text-muted {
+  color: var(--text-secondary) !important;
+  opacity: 0.8;
+}
+/* Prevent any white or transparent backgrounds that would cause illegibility */
+.city-card:not([style*="background"]),
+.card.city-card:not([style*="background"]) {
+  background: rgba(255,255,255,0.9) !important;
+  background-color: rgba(255,255,255,0.9) !important;
+}
+.city-card:hover, 
+.city-card:focus,
+.city-card:active,
+.city-card:focus-visible,
+.city-card[aria-pressed="true"],
+.city-card.show {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
   outline: none;
-  background: rgba(255,255,255,0.95) !important;
-  color: #0b1220 !important;
+  background: rgba(255,255,255,1) !important;
+  color: var(--text-primary) !important;
+  border-color: rgba(99, 102, 241, 0.2) !important;
 }
-.city-card:active, .city-card:focus-visible{
-  background: rgba(255,255,255,0.95) !important;
-  color: #0b1220 !important;
-  outline: 2px solid rgba(59, 130, 246, 0.5);
+.city-card:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5) !important;
   outline-offset: 2px;
 }
-.city-card:active *, .city-card:focus *, .city-card:focus-visible * {
-  color: #0b1220 !important;
+/* Ensure all child elements maintain contrast */
+.city-card *,
+.city-card:hover *,
+.city-card:focus *,
+.city-card:active *,
+.city-card:focus-visible * {
+  color: var(--text-primary) !important;
 }
-/* Ensure text remains visible in all states */
-.city-card.glass h5,
-.city-card.glass .text-muted,
-.city-card.glass .fs-4,
-.city-card.glass .small {
-  color: inherit;
+.city-card h5,
+.city-card h5:hover,
+.city-card h5:focus,
+.city-card h5:active {
+  color: var(--text-primary) !important;
 }
-.city-card.glass .text-muted {
-  color: rgba(11, 18, 32, 0.7) !important;
-}
+.city-card .text-muted,
+.city-card:hover .text-muted,
 .city-card:focus .text-muted,
-.city-card:active .text-muted,
-.city-card:focus-visible .text-muted {
-  color: rgba(11, 18, 32, 0.7) !important;
+.city-card:active .text-muted {
+  color: var(--text-secondary) !important;
+  opacity: 0.8 !important;
+}
+.city-card .fs-4,
+.city-card .small {
+  color: var(--text-primary) !important;
 }
 
 /* Grid responsiveness */
 #citiesGrid .col{
   display:flex;
+}
+
+/* Main content area */
+#mainContent {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+#mainContent h2 {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
 }
 
 /* Small utility */
@@ -96,12 +222,113 @@ body{
   100%{background-position:200% 0}
 }
 
-/* Modal glass variant */
-.modal-content.glass{
-  background: rgba(255,255,255,0.95);
+/* Featured card - ensure proper contrast */
+#featuredCard.card.glass,
+#featuredCard.card.glass.text-dark {
+  background: rgba(255,255,255,0.95) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+}
+#featuredCard.card.glass *,
+#featuredCard.card.glass.text-dark * {
+  color: var(--text-primary) !important;
+}
+#featuredCard.card.glass .text-muted,
+#featuredCard.card.glass.text-dark .text-muted {
+  color: var(--text-secondary) !important;
+  opacity: 0.8 !important;
+}
+
+/* Modal glass variant - ensure all text is readable */
+.modal-content.glass,
+.modal-content.glass.modal-content {
+  background: rgba(255,255,255,0.98) !important;
+  background-color: rgba(255,255,255,0.98) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+}
+.modal-content.glass *,
+.modal-content.glass .modal-header *,
+.modal-content.glass .modal-body *,
+.modal-content.glass .modal-footer * {
+  color: var(--text-primary) !important;
+}
+.modal-content.glass .modal-title,
+.modal-content.glass h5,
+.modal-content.glass .lead,
+.modal-content.glass p,
+.modal-content.glass li,
+.modal-content.glass strong,
+.modal-content.glass span {
+  color: var(--text-primary) !important;
+}
+.modal-content.glass .text-muted,
+.modal-content.glass .modal-body .text-muted {
+  color: var(--text-secondary) !important;
+  opacity: 0.8 !important;
+}
+.modal-content.glass .btn-close {
+  filter: brightness(0) saturate(0) !important;
+  opacity: 0.6 !important;
+}
+.modal-content.glass .btn-close:hover {
+  opacity: 1 !important;
 }
 
 /* Unit toggle */
 .form-check-input {
   cursor: pointer;
+}
+
+/* CRITICAL: Force proper contrast for all city cards in ALL states - highest specificity */
+body .container #citiesGrid .col .card.city-card.glass,
+body .container #citiesGrid .col .card.city-card.glass[role="button"],
+body .container #citiesGrid .col .card.city-card.glass:hover,
+body .container #citiesGrid .col .card.city-card.glass:focus,
+body .container #citiesGrid .col .card.city-card.glass:active,
+body .container #citiesGrid .col .card.city-card.glass:focus-visible,
+body .container #citiesGrid .col .card.city-card.glass:focus-within {
+  background: rgba(255,255,255,0.95) !important;
+  background-color: rgba(255,255,255,0.95) !important;
+  color: #0b1220 !important;
+}
+body .container #citiesGrid .col .card.city-card.glass *,
+body .container #citiesGrid .col .card.city-card.glass:hover *,
+body .container #citiesGrid .col .card.city-card.glass:focus *,
+body .container #citiesGrid .col .card.city-card.glass:active * {
+  color: #0b1220 !important;
+}
+body .container #citiesGrid .col .card.city-card.glass .text-muted,
+body .container #citiesGrid .col .card.city-card.glass:hover .text-muted,
+body .container #citiesGrid .col .card.city-card.glass:focus .text-muted,
+body .container #citiesGrid .col .card.city-card.glass:active .text-muted {
+  color: rgba(11, 18, 32, 0.7) !important;
+  opacity: 1 !important;
+}
+
+/* CRITICAL: Force proper contrast for modal content - highest specificity */
+body .modal.show .modal-content.glass,
+body .modal.show .modal-dialog .modal-content.glass,
+body #detailModal .modal-content.glass,
+body #detailModal .modal-content.glass .modal-header,
+body #detailModal .modal-content.glass .modal-body,
+body #detailModal .modal-content.glass .modal-footer {
+  background: rgba(255,255,255,0.95) !important;
+  background-color: rgba(255,255,255,0.95) !important;
+  color: #0b1220 !important;
+}
+body #detailModal .modal-content.glass *,
+body #detailModal .modal-content.glass .modal-header *,
+body #detailModal .modal-content.glass .modal-body *,
+body #detailModal .modal-content.glass .modal-footer *,
+body #detailModal .modal-content.glass .modal-title,
+body #detailModal .modal-content.glass h5,
+body #detailModal .modal-content.glass .lead,
+body #detailModal .modal-content.glass p,
+body #detailModal .modal-content.glass li,
+body #detailModal .modal-content.glass ul,
+body #detailModal .modal-content.glass strong,
+body #detailModal .modal-content.glass span {
+  color: #0b1220 !important;
 }
