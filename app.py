@@ -239,7 +239,12 @@ def offline_page():
 def service_worker():
     # Serve the compiled/standalone service worker file from static/js/sw.js
     # This ensures register('/sw.js') has the proper scope '/'
-    return send_from_directory(os.path.join(app.root_path, 'static', 'js'), 'sw.js')
+    response = send_from_directory(os.path.join(app.root_path, 'static', 'js'), 'sw.js')
+    # Always prevent caching of the service worker itself
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 
 if __name__ == '__main__':

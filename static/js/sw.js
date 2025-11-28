@@ -1,5 +1,5 @@
 // Basic service worker with precache + runtime caching for API requests and offline fallback
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2'; // Incremented to force cache refresh
 const PRECACHE = `precache-${CACHE_VERSION}`;
 const RUNTIME = `runtime-${CACHE_VERSION}`;
 const API_CACHE = `api-cache-${CACHE_VERSION}`;
@@ -105,21 +105,25 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // For other requests, try cache first then network
+  // For static assets (CSS, JS, images), use network-first strategy
+  // This ensures updates are immediately visible during development
   event.respondWith((async () => {
-    const cache = await caches.open(RUNTIME);
-    const cached = await cache.match(req);
-    if (cached) return cached;
     try {
+      // Try network first
       const resp = await fetch(req);
-      // Cache CSS/JS/images on demand
-      if (req.method === 'GET' && resp && resp.ok) {
+      if (resp && resp.ok) {
+        // Cache successful responses for offline use
+        const cache = await caches.open(RUNTIME);
         cache.put(req, resp.clone());
       }
       return resp;
     } catch (err) {
-      // fallback to cache if present
-      return cached || fetch(req);
+      // Network failed, try cache as fallback
+      const cache = await caches.open(RUNTIME);
+      const cached = await cache.match(req);
+      if (cached) return cached;
+      // No cache available, return error
+      throw err;
     }
   })());
 });
