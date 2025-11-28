@@ -95,7 +95,22 @@
                 <li><strong>Wind:</strong> <span id="modalWind"></span> mph</li>
                 <li><strong>Pressure:</strong> <span id="modalPressure"></span> hPa</li>
                 <li><strong>Visibility:</strong> <span id="modalVisibility"></span> km</li>
-                <li><strong>Sunrise / Sunset:</strong> <span id="modalSunrise"></span> / <span id="modalSunset"></span></li>
+                <li class="sun-times-modal">
+                  <div class="sun-time sunrise">
+                    <i class="fa-solid fa-sun sun-icon" aria-hidden="true"></i>
+                    <div>
+                      <span class="sun-label">Sunrise</span>
+                      <span class="sun-value" id="modalSunrise"></span>
+                    </div>
+                  </div>
+                  <div class="sun-time sunset">
+                    <i class="fa-solid fa-moon sun-icon" aria-hidden="true"></i>
+                    <div>
+                      <span class="sun-label">Sunset</span>
+                      <span class="sun-value" id="modalSunset"></span>
+                    </div>
+                  </div>
+                </li>
               </ul>
             </div>
           </div>

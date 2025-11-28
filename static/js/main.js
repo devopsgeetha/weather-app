@@ -114,37 +114,51 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
       <div class="city-card-details">
-        <div class="detail-row">
-          <span class="detail-label">Temp</span>
-          <span class="detail-value">${w.temperature}° (${w.feels_like}°)</span>
+        <div class="detail-row detail-row-inline">
+          <div class="detail-item">
+            <span class="detail-label">Temp</span>
+            <span class="detail-value">${w.temperature}° (${w.feels_like}°)</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Humidity</span>
+            <span class="detail-value">${w.humidity || 'N/A'}%</span>
+          </div>
         </div>
-        <div class="detail-row">
-          <span class="detail-label">Humidity</span>
-          <span class="detail-value">${w.humidity || 'N/A'}%</span>
+        <div class="detail-row detail-row-inline">
+          <div class="detail-item">
+            <span class="detail-label">Wind</span>
+            <span class="detail-value">${w.wind_speed || 'N/A'} mph</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Pressure</span>
+            <span class="detail-value">${w.pressure || 'N/A'} hPa</span>
+          </div>
         </div>
-        <div class="detail-row">
-          <span class="detail-label">Wind</span>
-          <span class="detail-value">${w.wind_speed || 'N/A'} mph</span>
+        <div class="detail-row detail-row-inline">
+          <div class="detail-item">
+            <span class="detail-label">Visibility</span>
+            <span class="detail-value">${visibility} km</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Rain</span>
+            <span class="detail-value">${w.rain_amount || 0} mm</span>
+          </div>
         </div>
-        <div class="detail-row">
-          <span class="detail-label">Pressure</span>
-          <span class="detail-value">${w.pressure || 'N/A'} hPa</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Visibility</span>
-          <span class="detail-value">${visibility} km</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Sunrise</span>
-          <span class="detail-value" style="font-size: 0.7rem;">${sunriseTime}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Sunset</span>
-          <span class="detail-value" style="font-size: 0.7rem;">${sunsetTime}</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Rain</span>
-          <span class="detail-value">${w.rain_amount || 0} mm</span>
+        <div class="detail-row detail-row-inline sun-times-row">
+          <div class="detail-item sun-time sunrise" aria-label="Sunrise time">
+            <i class="fa-solid fa-sun sun-icon"></i>
+            <div>
+              <span class="sun-label">Sunrise</span>
+              <span class="sun-value">${sunriseTime}</span>
+            </div>
+          </div>
+          <div class="detail-item sun-time sunset" aria-label="Sunset time">
+            <i class="fa-solid fa-moon sun-icon"></i>
+            <div>
+              <span class="sun-label">Sunset</span>
+              <span class="sun-value">${sunsetTime}</span>
+            </div>
+          </div>
         </div>
       </div>
     `;
