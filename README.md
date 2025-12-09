@@ -1,8 +1,7 @@
 ```markdown
 ## Progressive Web App & Caching (PWA)
 
-
-The main purpose of this repo is to demo the pr review is automated from a remote Github action [Link](https://github.com/marketplace/actions/ai-pr-reviewer-with-rag) with minimal setup. This repository now includes a rich front-end and PWA support (service worker + manifest) plus a small thread-safe in-memory cache on the server to reduce API calls. A beautiful, modern and robust Python web application to display the real-time weather conditions for any place on the planet Earth. Built with Flask and featuring a responsive, gradient-based UI.
+The main purpose of this repo is to demo the pr review is automated from a remote Github action [Link](https://github.com/marketplace/actions/ai-pr-reviewer-with-rag) with a minimal setup. This repository now includes a rich front-end and PWA support (service worker + manifest) plus a small thread-safe in-memory cache on the server to reduce API calls. A beautiful, modern and robust Python web application to display the real-time weather conditions for any place on the planet Earth. Built with Flask and featuring a responsive, gradient-based UI.
 
 Quick setup:
 1. Create a `.env` file with your OpenWeatherMap API key:
