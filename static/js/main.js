@@ -94,6 +94,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Combine all weather indicators
     const weatherIndicators = `${umbrellaIcon}${thunderstormIcon}${tornadoIcon}`;
     
+    // Favorite button
+    const isFav = isFavorite(w.city, w.country);
+    const favoriteBtn = `<button class="btn btn-sm btn-link p-0 favorite-btn" 
+      data-city="${w.city}" 
+      data-country="${w.country}"
+      title="${isFav ? 'Remove from favorites' : 'Add to favorites'}"
+      style="color: ${isFav ? '#ffc107' : '#6c757d'}; text-decoration: none;">
+      <i class="fa-solid fa-star${isFav ? '' : '-o'}"></i>
+    </button>`;
+
     card.innerHTML = `
       <div class="city-card-header">
         <div class="d-flex align-items-center justify-content-between">
@@ -103,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <h5 class="mb-0 d-flex align-items-center gap-2">
                 ${w.city}
                 ${weatherIndicators}
+                ${favoriteBtn}
               </h5>
               <div class="text-muted" style="font-size: 0.7rem; line-height: 1.1;">${w.country} • ${w.description}</div>
             </div>
@@ -162,6 +173,21 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
     `;
+
+    // Favorite button handler
+    const favBtn = card.querySelector('.favorite-btn');
+    if (favBtn) {
+      favBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const city = favBtn.dataset.city;
+        const country = favBtn.dataset.country;
+        const isFav = toggleFavorite(city, country);
+        favBtn.style.color = isFav ? '#ffc107' : '#6c757d';
+        const icon = favBtn.querySelector('i');
+        icon.className = isFav ? 'fa-solid fa-star' : 'fa-solid fa-star-o';
+        favBtn.title = isFav ? 'Remove from favorites' : 'Add to favorites';
+      });
+    }
 
     card.addEventListener('click', () => showDetails(w));
     card.addEventListener('keypress', (e) => { if (e.key === 'Enter') showDetails(w); });
@@ -277,6 +303,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const parts = raw.split(',').map(p => p.trim());
     const [city, state, country] = parts;
 
+    // Show loading state
+    searchCity.disabled = true;
+    const searchBtn = searchForm.querySelector('button[type="submit"]');
+    const originalBtnText = searchBtn.innerHTML;
+    searchBtn.disabled = true;
+    searchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Searching...';
+
     try {
       const q = new URL('/api/weather', window.location.origin);
       q.searchParams.set('city', city || '');
@@ -285,11 +318,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const res = await fetch(q);
       const data = await res.json();
+      
+      // Reset button state
+      searchCity.disabled = false;
+      searchBtn.disabled = false;
+      searchBtn.innerHTML = originalBtnText;
+      
       if (!res.ok) {
-        searchFeedback.textContent = data.error || 'Search failed';
+        const errorMsg = data.error || 'Search failed';
+        searchFeedback.textContent = errorMsg;
         searchFeedback.classList.remove('d-none');
+        showToast(errorMsg, 'error');
         return;
       }
+      
+      showToast(`Weather data loaded for ${data.city}`, 'success');
 
       // Convert units if needed
       const unit = currentUnit();
@@ -301,8 +344,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       showDetails(data);
     } catch (err) {
-      searchFeedback.textContent = `Search error: ${err.message}`;
+      // Reset button state on error
+      searchCity.disabled = false;
+      const searchBtn = searchForm.querySelector('button[type="submit"]');
+      searchBtn.disabled = false;
+      searchBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Search';
+      
+      const errorMsg = `Search error: ${err.message}`;
+      searchFeedback.textContent = errorMsg;
       searchFeedback.classList.remove('d-none');
+      showToast(errorMsg, 'error');
     }
   });
 
@@ -328,6 +379,110 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => {
         console.warn('Service worker registration failed:', err);
       });
+  }
+
+  // View favorites button
+  const viewFavoritesBtn = document.getElementById('viewFavoritesBtn');
+  if (viewFavoritesBtn) {
+    viewFavoritesBtn.addEventListener('click', () => {
+      const favorites = getFavorites();
+      if (favorites.length === 0) {
+        showToast('No favorite cities yet. Click the star icon on any city card to add it.', 'info');
+        return;
+      }
+      
+      citiesGrid.innerHTML = '';
+      citiesGrid.innerHTML = '<div class="col-12"><h6 class="mb-3">Favorite Cities</h6></div>';
+      
+      // Fetch weather for each favorite
+      const fetchPromises = favorites.map(fav => {
+        const [city, country] = fav.key.split(',');
+        return fetch(`/api/weather?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (!data.error) {
+              const unit = currentUnit();
+              if (unit === 'metric') {
+                const convert = (v) => (v === null || v === undefined) ? v : Math.round((v - 32) * 5 / 9);
+                data.temperature = convert(data.temperature);
+                data.feels_like = convert(data.feels_like);
+              }
+              citiesGrid.appendChild(createCityCard(data));
+            }
+          })
+          .catch(err => console.error(`Failed to load ${city}:`, err));
+      });
+      
+      Promise.all(fetchPromises).then(() => {
+        if (citiesGrid.children.length === 1) {
+          citiesGrid.innerHTML = '<div class="col-12"><div class="alert alert-info">Failed to load favorite cities. They may have been removed.</div></div>';
+        }
+      });
+    });
+  }
+
+  // View metrics button
+  const viewMetricsBtn = document.getElementById('viewMetricsBtn');
+  if (viewMetricsBtn) {
+    viewMetricsBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/metrics');
+        const data = await res.json();
+        
+        const metricsHtml = `
+          <div class="card glass p-4">
+            <h5 class="mb-3">Application Metrics</h5>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6>Cache Statistics</h6>
+                <ul class="list-unstyled">
+                  <li>Size: ${data.cache.size} / ${data.cache.max_size}</li>
+                  <li>Utilization: ${data.cache.utilization_percent}%</li>
+                  <li>TTL: ${data.cache.ttl_seconds}s</li>
+                  <li>Hits: ${data.cache.hits}</li>
+                </ul>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Rate Limiting</h6>
+                <ul class="list-unstyled">
+                  <li>Active IPs: ${data.rate_limiting.active_ips}</li>
+                  <li>Total Requests: ${data.rate_limiting.total_requests}</li>
+                  <li>Limit: ${data.rate_limiting.limit_per_window} / ${data.rate_limiting.window_seconds}s</li>
+                </ul>
+              </div>
+            </div>
+            <div class="mt-3">
+              <small class="text-muted">Last updated: ${new Date(data.timestamp).toLocaleString()}</small>
+            </div>
+          </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.createElement('div'));
+        const modalEl = document.createElement('div');
+        modalEl.className = 'modal fade';
+        modalEl.innerHTML = `
+          <div class="modal-dialog">
+            <div class="modal-content glass">
+              <div class="modal-header">
+                <h5 class="modal-title">Application Metrics</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">${metricsHtml}</div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modalEl);
+        const metricsModal = new bootstrap.Modal(modalEl);
+        metricsModal.show();
+        modalEl.addEventListener('hidden.bs.modal', () => modalEl.remove());
+      } catch (err) {
+        showToast('Failed to load metrics', 'error');
+        console.error('Metrics error:', err);
+      }
+    });
   }
 
   // Health check on load

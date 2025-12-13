@@ -77,7 +77,17 @@
   </header>
 
   <main class="container my-5" id="mainContent">
-    <h2 class="h5 mb-3">Default Cities</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 mb-0">Default Cities</h2>
+      <div class="d-flex gap-2">
+        <button id="viewFavoritesBtn" class="btn btn-sm btn-outline-primary" title="View favorite cities (Ctrl+K)">
+          <i class="fa-solid fa-star"></i> Favorites
+        </button>
+        <button id="viewMetricsBtn" class="btn btn-sm btn-outline-secondary" title="View app metrics">
+          <i class="fa-solid fa-chart-line"></i> Metrics
+        </button>
+      </div>
+    </div>
     <div id="citiesGrid" class="row g-3" aria-live="polite">
       <!-- Cards injected by JS -->
     </div>
