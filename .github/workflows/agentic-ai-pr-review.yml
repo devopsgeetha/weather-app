@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
       
       - name: AI PR Review (Agentic)
-        uses: devopsgeetha/pr-reviewer-action@agentic_ai_v2  # Use AGENTIC_AI branch
+        uses: devopsgeetha/pr-reviewer-action@agentic_ai_v3  # Use AGENTIC_AI branch
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
