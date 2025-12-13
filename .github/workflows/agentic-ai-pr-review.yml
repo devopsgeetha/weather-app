@@ -25,5 +25,5 @@ jobs:
         with:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          openai_model: gpt-4-turbo-preview  # Recommended for agentic mode
+          openai_model: gpt-4-turbo-mini  # Recommended for agentic mode
           comment_mode: inline
