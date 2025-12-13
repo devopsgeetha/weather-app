@@ -26,7 +26,7 @@ Quick setup:
    pip install -r requirements.txt   # requests, python-dotenv
    python app.py
    ```
-   Open http://localhost:5000 in your browser.
+   Open http://localhost:5001 in your browser.
 
 4. Test features:
    - Search for cities using the search bar (examples: "Fremont, CA, US", "Chennai, IN").
