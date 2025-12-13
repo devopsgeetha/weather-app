@@ -181,17 +181,26 @@ def get_weather_data(city_name, state='', country=''):
         _cache_set(cache_key, weather_info)
 
         return weather_info
+    except requests.exceptions.Timeout:
+        return {'error': 'Request timeout: The weather service took too long to respond. Please try again.'}
+    except requests.exceptions.ConnectionError:
+        return {'error': 'Connection error: Unable to reach the weather service. Please check your internet connection.'}
     except requests.exceptions.RequestException as e:
         return {'error': f'Failed to fetch weather data: {str(e)}'}
     except KeyError as e:
-        return {'error': f'Unexpected API response format: {str(e)}'}
+        return {'error': f'Unexpected API response format: Missing key {str(e)}'}
     except Exception as e:
-        return {'error': f'An error occurred: {str(e)}'}
+        return {'error': f'An unexpected error occurred: {str(e)}'}
 
 
 @app.route('/')
 def index():
-    """Render the main page"""
+    """
+    Render the main weather app page.
+    
+    Returns:
+        HTML template: The main index.html template with weather app UI
+    """
     return render_template('index.html')
 
 

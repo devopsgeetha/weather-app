@@ -1,7 +1,7 @@
 name: Agentic PR Review
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 jobs:
@@ -11,6 +11,7 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+      checks: read
     steps:
       - name: Checkout PR code
         uses: actions/checkout@v3
@@ -25,3 +26,4 @@ jobs:
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           openai_model: gpt-4-turbo-preview  # Recommended for agentic mode
+          comment_mode: inline

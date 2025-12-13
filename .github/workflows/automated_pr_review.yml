@@ -15,5 +15,5 @@ jobs:
       - name: Automated_Prreview
         uses: devopsgeetha/automated_prreview@main
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
