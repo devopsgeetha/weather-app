@@ -58,7 +58,7 @@ def check_rate_limit(ip_address: str) -> bool:
         ip_address: Client IP address
         
     Returns:
-        True if within limit, False if exceeded
+        True if within the limit, False if it exceeded
     """
     current_time = time.time()
     with _rate_limit_lock:
