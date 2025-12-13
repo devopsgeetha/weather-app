@@ -138,6 +138,90 @@ def _cache_set(key, value):
             _cache.popitem(last=False)
         _cache[key] = {"ts": time.time(), "value": dict(value)}
 
+
+def calculate_weather_severity(temperature, wind_speed, rain_amount, has_thunderstorm, has_tornado, visibility, humidity):
+    """
+    Calculate weather severity index based on multiple meteorological factors.
+    
+    This function evaluates weather conditions and assigns a severity level (Low, Moderate, High)
+    based on temperature extremes, wind speed, precipitation, severe weather events, visibility, and humidity.
+    
+    Args:
+        temperature: Temperature in Fahrenheit
+        wind_speed: Wind speed in mph
+        rain_amount: Rainfall amount in mm
+        has_thunderstorm: Boolean indicating thunderstorm presence
+        has_tornado: Boolean indicating tornado warning
+        visibility: Visibility in meters
+        humidity: Humidity percentage (0-100)
+    
+    Returns:
+        Tuple[str, int]: (severity_index, severity_score)
+            - severity_index: 'Low', 'Moderate', or 'High'
+            - severity_score: Numeric score (0-100) representing overall severity
+    """
+    score = 0
+    
+    # Temperature factor (penalize extreme temperatures)
+    # Ideal range: 60-80°F (15-27°C)
+    temp_deviation = abs(temperature - 70)
+    if temp_deviation > 30:  # Very extreme (>100°F or <40°F)
+        score += 30
+    elif temp_deviation > 20:  # Extreme (90-100°F or 40-50°F)
+        score += 20
+    elif temp_deviation > 10:  # Moderate deviation
+        score += 10
+    
+    # Wind speed factor
+    if wind_speed > 50:  # Hurricane force
+        score += 30
+    elif wind_speed > 30:  # Strong winds
+        score += 20
+    elif wind_speed > 15:  # Moderate winds
+        score += 10
+    
+    # Precipitation factor
+    if rain_amount > 50:  # Heavy rainfall (>50mm)
+        score += 25
+    elif rain_amount > 20:  # Moderate rainfall
+        score += 15
+    elif rain_amount > 5:  # Light rainfall
+        score += 5
+    
+    # Severe weather events (highest priority)
+    if has_tornado:
+        score += 50  # Tornado is always high severity
+    elif has_thunderstorm:
+        score += 25  # Thunderstorms significantly increase severity
+    
+    # Visibility factor
+    visibility_km = visibility / 1000 if visibility else 10
+    if visibility_km < 0.5:  # Very poor visibility
+        score += 20
+    elif visibility_km < 2:  # Poor visibility
+        score += 10
+    elif visibility_km < 5:  # Reduced visibility
+        score += 5
+    
+    # Humidity factor (extreme humidity can indicate discomfort or storm conditions)
+    if humidity > 90:  # Very high humidity
+        score += 10
+    elif humidity < 20:  # Very low humidity (dry conditions)
+        score += 5
+    
+    # Cap score at 100
+    score = min(score, 100)
+    
+    # Determine severity index
+    if score >= 60:
+        severity_index = 'High'
+    elif score >= 30:
+        severity_index = 'Moderate'
+    else:
+        severity_index = 'Low'
+    
+    return severity_index, round(score)
+
 # Validate API key on startup
 if not WEATHER_API_KEY or WEATHER_API_KEY == 'your_api_key_here':
     print("⚠️  WARNING: WEATHER_API_KEY not set or using placeholder value.")
@@ -227,6 +311,17 @@ def get_weather_data(city_name, state='', country=''):
         # Check for tornado (weather ID 781)
         has_tornado = weather_id == 781
 
+        # Calculate weather severity index based on multiple factors
+        severity_index, severity_score = calculate_weather_severity(
+            temperature=data['main']['temp'] if data.get('main') and data['main'].get('temp') is not None else 70,
+            wind_speed=data['wind']['speed'] if data.get('wind') and data['wind'].get('speed') is not None else 0,
+            rain_amount=rain_amount,
+            has_thunderstorm=has_thunderstorm,
+            has_tornado=has_tornado,
+            visibility=data.get('visibility', 10000),
+            humidity=data.get('main', {}).get('humidity', 50)
+        )
+
         # Format the response
         weather_info = {
             'city': data.get('name', city_name),
@@ -246,8 +341,8 @@ def get_weather_data(city_name, state='', country=''):
             'needs_umbrella': needs_umbrella,
             'has_thunderstorm': has_thunderstorm,
             'has_tornado': has_tornado,
-            'severity_index': 'High' if (abs(round(data['main']['temp']) - 70) * 1.5 + (round(data['wind']['speed'], 1) * 2) + (round(rain_amount, 1) * 20)) > 50 else 'Moderate' if (abs(round(data['main']['temp']) - 70) * 1.5 + (round(data['wind']['speed'], 1) * 2) + (round(rain_amount, 1) * 20)) > 20 else 'Low',
-            'severity_score': round((abs(round(data['main']['temp']) - 70) * 1.5 + (round(data['wind']['speed'], 1) * 2) + (round(rain_amount, 1) * 20)))
+            'severity_index': severity_index,
+            'severity_score': severity_score
         }
 
         # Cache only successful formatted response
