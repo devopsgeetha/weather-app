@@ -5,7 +5,11 @@ Weather App - A simple Flask application to display weather conditions
 import os
 import time
 import threading
+import logging
+import re
 from collections import OrderedDict
+from datetime import datetime
+from typing import Tuple
 from flask import Flask, render_template, request, jsonify, send_from_directory
 
 import requests
@@ -13,17 +17,84 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
 # Disable caching for static files in development
 @app.after_request
 def add_no_cache_headers(response):
-    """Add no-cache headers to prevent browser caching during development"""
+    """
+    Add no-cache headers to prevent browser caching during development.
+    
+    Args:
+        response: Flask response object
+        
+    Returns:
+        Flask response object with no-cache headers added
+    """
     if app.debug:
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
     return response
+
+# Simple rate limiting (in-memory, per IP)
+_rate_limit_store = {}
+_rate_limit_lock = threading.Lock()
+RATE_LIMIT_REQUESTS = 100  # requests per window
+RATE_LIMIT_WINDOW = 3600  # 1 hour in seconds
+
+def check_rate_limit(ip_address: str) -> bool:
+    """
+    Check if IP address has exceeded rate limit.
+    
+    Args:
+        ip_address: Client IP address
+        
+    Returns:
+        True if within limit, False if exceeded
+    """
+    current_time = time.time()
+    with _rate_limit_lock:
+        if ip_address not in _rate_limit_store:
+            _rate_limit_store[ip_address] = {'count': 1, 'window_start': current_time}
+            return True
+        
+        record = _rate_limit_store[ip_address]
+        # Reset window if expired
+        if current_time - record['window_start'] > RATE_LIMIT_WINDOW:
+            record['count'] = 1
+            record['window_start'] = current_time
+            return True
+        
+        # Check limit
+        if record['count'] >= RATE_LIMIT_REQUESTS:
+            return False
+        
+        record['count'] += 1
+        return True
+
+# Request logging and rate limiting middleware
+@app.before_request
+def log_request_info():
+    """Log incoming requests and enforce rate limiting"""
+    client_ip = request.remote_addr or 'unknown'
+    logger.info(f'Request: {request.method} {request.path} from {client_ip}')
+    
+    # Rate limiting for API endpoints
+    if request.path.startswith('/api/') and request.path != '/api/health':
+        if not check_rate_limit(client_ip):
+            logger.warning(f'Rate limit exceeded for {client_ip}')
+            return jsonify({'error': 'Rate limit exceeded. Please try again later.'}), 429
+    
+    if request.args:
+        logger.debug(f'Query params: {dict(request.args)}')
 
 # OpenWeatherMap API configuration
 WEATHER_API_KEY = os.getenv('WEATHER_API_KEY', '')
@@ -207,12 +278,15 @@ def index():
 @app.route('/api/weather', methods=['GET'])
 def get_weather():
     """API endpoint to get weather for a specific location"""
-    city = request.args.get('city', '')
-    state = request.args.get('state', '')
-    country = request.args.get('country', '')
+    city = request.args.get('city', '').strip()
+    state = request.args.get('state', '').strip()
+    country = request.args.get('country', '').strip()
 
-    if not city:
-        return jsonify({'error': 'City name is required'}), 400
+    # Validate input
+    is_valid, error_msg = validate_city_input(city, state, country)
+    if not is_valid:
+        logger.warning(f'Invalid input: {error_msg} for city={city}, state={state}, country={country}')
+        return jsonify({'error': error_msg}), 400
 
     weather_data = get_weather_data(city, state, country)
 
@@ -254,8 +328,12 @@ def offline_page():
 # Serve the service worker at the root so it can control the whole scope
 @app.route('/sw.js')
 def service_worker():
-    # Serve the compiled/standalone service worker file from static/js/sw.js
-    # This ensures register('/sw.js') has the proper scope '/'
+    """
+    Serve the service worker file with no-cache headers.
+    
+    Returns:
+        Service worker JavaScript file with appropriate headers
+    """
     response = send_from_directory(os.path.join(app.root_path, 'static', 'js'), 'sw.js')
     # Always prevent caching of the service worker itself
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
@@ -264,5 +342,95 @@ def service_worker():
     return response
 
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """
+    Health check endpoint to monitor application status.
+    
+    Returns:
+        JSON response with application health status and timestamp
+    """
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'cache_size': len(_cache),
+        'cache_maxsize': CACHE_MAXSIZE
+    })
+
+
+@app.route('/api/metrics', methods=['GET'])
+def get_metrics():
+    """
+    Get application metrics for monitoring.
+    
+    Returns:
+        JSON response with cache statistics and rate limit info
+    """
+    with _rate_limit_lock:
+        active_ips = len(_rate_limit_store)
+        total_requests = sum(r['count'] for r in _rate_limit_store.values())
+    
+    cache_hits = sum(1 for entry in _cache.values() 
+                     if (time.time() - entry['ts']) <= CACHE_TTL)
+    
+    return jsonify({
+        'cache': {
+            'size': len(_cache),
+            'max_size': CACHE_MAXSIZE,
+            'ttl_seconds': CACHE_TTL,
+            'hits': cache_hits,
+            'utilization_percent': round((len(_cache) / CACHE_MAXSIZE) * 100, 2) if CACHE_MAXSIZE > 0 else 0
+        },
+        'rate_limiting': {
+            'active_ips': active_ips,
+            'total_requests': total_requests,
+            'limit_per_window': RATE_LIMIT_REQUESTS,
+            'window_seconds': RATE_LIMIT_WINDOW
+        },
+        'timestamp': datetime.utcnow().isoformat()
+    })
+
+
+def validate_city_input(city: str, state: str = '', country: str = '') -> Tuple[bool, str]:
+    """
+    Validate city search input to prevent injection and invalid data.
+    
+    Args:
+        city: City name
+        state: State/province name
+        country: Country code
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not city or not city.strip():
+        return False, 'City name is required'
+    
+    # Basic length validation
+    if len(city) > 100:
+        return False, 'City name is too long (max 100 characters)'
+    
+    if state and len(state) > 100:
+        return False, 'State name is too long (max 100 characters)'
+    
+    if country and len(country) > 10:
+        return False, 'Country code is too long (max 10 characters)'
+    
+    # Basic character validation (allow letters, spaces, hyphens, apostrophes, commas)
+    valid_pattern = re.compile(r"^[a-zA-Z\s\-\',\.]+$")
+    
+    if not valid_pattern.match(city.strip()):
+        return False, 'City name contains invalid characters'
+    
+    if state and not valid_pattern.match(state.strip()):
+        return False, 'State name contains invalid characters'
+    
+    if country and not re.match(r'^[A-Z]{2,3}$', country.strip().upper()):
+        return False, 'Country code must be 2-3 uppercase letters'
+    
+    return True, ''
+
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.getenv('PORT', 5001)))
+    logger.info('Starting Weather App server...')
+    app.run(debug=True, host='0.0.0.0', port=5000)

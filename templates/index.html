@@ -23,11 +23,16 @@
     <div class="container">
       <div class="d-flex align-items-center justify-content-between">
         <h1 class="h3 mb-0">Weather App</h1>
-        <form id="searchForm" class="d-flex" role="search" aria-label="Search weather">
-          <input id="searchCity" class="form-control me-2" type="search" placeholder="City, State?, Country?"
-            aria-label="Search" />
-          <button class="btn btn-primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
-        </form>
+        <div class="d-flex gap-2">
+          <button id="refreshBtn" class="btn btn-outline-light" type="button" title="Refresh weather data">
+            <i class="fa-solid fa-arrow-rotate-right"></i>
+          </button>
+          <form id="searchForm" class="d-flex" role="search" aria-label="Search weather">
+            <input id="searchCity" class="form-control me-2" type="search" placeholder="City, State?, Country?"
+              aria-label="Search" />
+            <button class="btn btn-primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+          </form>
+        </div>
       </div>
 
       <div class="row mt-4 align-items-center">
@@ -72,7 +77,17 @@
   </header>
 
   <main class="container my-5" id="mainContent">
-    <h2 class="h5 mb-3">Default Cities</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 mb-0">Default Cities</h2>
+      <div class="d-flex gap-2">
+        <button id="viewFavoritesBtn" class="btn btn-sm btn-outline-primary" title="View favorite cities (Ctrl+K)">
+          <i class="fa-solid fa-star"></i> Favorites
+        </button>
+        <button id="viewMetricsBtn" class="btn btn-sm btn-outline-secondary" title="View app metrics">
+          <i class="fa-solid fa-chart-line"></i> Metrics
+        </button>
+      </div>
+    </div>
     <div id="citiesGrid" class="row g-3" aria-live="polite">
       <!-- Cards injected by JS -->
     </div>

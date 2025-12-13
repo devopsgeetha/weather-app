@@ -391,6 +391,34 @@ body {
   cursor: pointer;
 }
 
+/* Refresh button styling */
+#refreshBtn {
+  transition: transform 0.3s ease;
+}
+
+#refreshBtn:hover {
+  transform: rotate(90deg);
+}
+
+#refreshBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading spinner animation */
+.fa-spinner.fa-spin {
+  animation: fa-spin 1s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 /* CRITICAL: Force proper contrast for all city cards in ALL states - highest specificity */
 body .container #citiesGrid .col .card.city-card.glass,
 body .container #citiesGrid .col .card.city-card.glass[role="button"],
@@ -444,4 +472,73 @@ body #detailModal .modal-content.glass ul,
 body #detailModal .modal-content.glass strong,
 body #detailModal .modal-content.glass span {
   color: #0b1220 !important;
+}
+/* Favorite button styling */
+.favorite-btn {
+  transition: transform 0.2s ease, color 0.2s ease;
+  font-size: 0.9rem;
+  z-index: 10;
+  position: relative;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.2);
+  color: #ffc107 !important;
+}
+
+.favorite-btn:focus {
+  outline: 2px solid rgba(255, 193, 7, 0.5);
+  outline-offset: 2px;
+}
+
+/* Toast notifications */
+.toast-container {
+  z-index: 9999;
+}
+
+.toast {
+  min-width: 300px;
+}
+
+/* Loading spinner */
+.fa-spinner.fa-spin {
+  animation: fa-spin 1s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Metrics and favorites buttons */
+#viewMetricsBtn, #viewFavoritesBtn {
+  transition: all 0.2s ease;
+}
+
+#viewMetricsBtn:hover, #viewFavoritesBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Accessibility */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Error states */
+.alert {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
