@@ -1,27 +1,31 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Weather App</title>
 
-  <meta name="theme-color" content="#01303f" />
+  <meta name="theme-color" content="#a18cd1" />
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
   <!-- Bootstrap 5 CSS (CDN) -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet" integrity="" crossorigin="anonymous">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"
+    integrity="" crossorigin="anonymous">
   <!-- Icons (optional) -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <!-- Custom styles -->
   <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
 </head>
+
 <body>
   <header class="hero py-5 text-white">
     <div class="container">
       <div class="d-flex align-items-center justify-content-between">
         <h1 class="h3 mb-0">Weather App</h1>
         <form id="searchForm" class="d-flex" role="search" aria-label="Search weather">
-          <input id="searchCity" class="form-control me-2" type="search" placeholder="City, State?, Country?" aria-label="Search" />
+          <input id="searchCity" class="form-control me-2" type="search" placeholder="City, State?, Country?"
+            aria-label="Search" />
           <button class="btn btn-primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
         </form>
       </div>
@@ -39,7 +43,7 @@
           <div id="featuredCard" class="card glass text-dark p-3 shadow-sm d-none mt-3" aria-live="polite">
             <div class="d-flex align-items-center">
               <div class="me-3 text-center">
-                <img id="featuredIcon" src="" alt="weather icon" width="96" height="96" loading="lazy"/>
+                <img id="featuredIcon" src="" alt="weather icon" width="96" height="96" loading="lazy" />
               </div>
               <div>
                 <h2 id="featuredCity" class="mb-0"></h2>
@@ -90,7 +94,8 @@
             </div>
             <div class="col-md-8">
               <ul class="list-unstyled mb-0">
-                <li><strong>Temperature:</strong> <span id="modalTemp"></span> ° (<span id="modalFeels"></span>° feels like)</li>
+                <li><strong>Temperature:</strong> <span id="modalTemp"></span> ° (<span id="modalFeels"></span>° feels
+                  like)</li>
                 <li><strong>Humidity:</strong> <span id="modalHumidity"></span>%</li>
                 <li><strong>Wind:</strong> <span id="modalWind"></span> mph</li>
                 <li><strong>Pressure:</strong> <span id="modalPressure"></span> hPa</li>
@@ -127,4 +132,5 @@
   <!-- Main JS -->
   <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
+
 </html>
