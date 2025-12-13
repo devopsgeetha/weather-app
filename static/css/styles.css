@@ -1,10 +1,10 @@
 :root{
-  --glass-bg: rgba(255,255,255,0.95);
-  --accent: rgba(99, 102, 241, 0.1);
-  --page-bg: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 50%, #f0f4f8 100%);
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --umbrella-needed: #3b82f6;
+  --glass-bg: rgba(255,255,255,0.85);
+  --accent: rgba(56, 189, 248, 0.1);
+  --page-bg: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --umbrella-needed: #0ea5e9;
   --umbrella-not-needed: #94a3b8;
 }
 
@@ -19,9 +19,9 @@ body{
 
 /* Modern hero gradient */
 .hero{
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 6px -1px rgba(14, 165, 233, 0.1);
 }
 
 @keyframes gradientShift{
