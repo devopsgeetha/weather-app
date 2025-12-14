@@ -268,6 +268,145 @@ document.addEventListener('DOMContentLoaded', () => {
     return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
   }
 
+  async function loadAirQuality(lat, lon, badgeElement) {
+    try {
+      const res = await fetch(`/api/air-quality?lat=${lat}&lon=${lon}`);
+      const data = await res.json();
+      
+      if (!res.ok || data.error) {
+        badgeElement.remove();
+        return;
+      }
+      
+      const aqi = data.aqi;
+      const label = data.aqi_label;
+      
+      // AQI color coding
+      const aqiColors = {
+        1: '#10b981', // Good - Green
+        2: '#84cc16', // Fair - Light Green
+        3: '#f59e0b', // Moderate - Yellow/Orange
+        4: '#ef4444', // Poor - Red
+        5: '#991b1b'  // Very Poor - Dark Red
+      };
+      
+      const color = aqiColors[aqi] || '#6c757d';
+      badgeElement.className = 'aqi-badge';
+      badgeElement.style.background = `linear-gradient(135deg, ${color}22, ${color}11)`;
+      badgeElement.style.color = color;
+      badgeElement.style.border = `1.5px solid ${color}`;
+      badgeElement.innerHTML = `<i class="fa-solid fa-wind"></i> AQI: ${label}`;
+      badgeElement.title = data.aqi_description;
+      
+      // Make badge clickable to show details
+      badgeElement.style.cursor = 'pointer';
+      badgeElement.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showAQIDetails(data);
+      });
+      
+    } catch (err) {
+      badgeElement.remove();
+      console.error('Failed to load AQI:', err);
+    }
+  }
+
+  function showAQIDetails(data) {
+    const modalEl = document.createElement('div');
+    modalEl.className = 'modal fade';
+    
+    const aqiColors = {
+      1: '#10b981',
+      2: '#84cc16',
+      3: '#f59e0b',
+      4: '#ef4444',
+      5: '#991b1b'
+    };
+    
+    const color = aqiColors[data.aqi] || '#6c757d';
+    
+    modalEl.innerHTML = `
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fa-solid fa-wind"></i> Air Quality Index
+              <span class="aqi-badge ms-2" style="background: linear-gradient(135deg, ${color}22, ${color}11); color: ${color}; border: 1.5px solid ${color};">
+                ${data.aqi_label}
+              </span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert" style="background: ${color}22; border-color: ${color}; color: ${color};">
+              <strong>${data.aqi_label}:</strong> ${data.aqi_description}
+            </div>
+            
+            <h6 class="mt-3 mb-3">Air Pollutants (μg/m³)</h6>
+            <div class="row g-3">
+              <div class="col-6 col-md-3">
+                <div class="card glass p-2 text-center">
+                  <small class="text-muted">PM2.5</small>
+                  <strong>${data.components.pm2_5}</strong>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="card glass p-2 text-center">
+                  <small class="text-muted">PM10</small>
+                  <strong>${data.components.pm10}</strong>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="card glass p-2 text-center">
+                  <small class="text-muted">O₃</small>
+                  <strong>${data.components.o3}</strong>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="card glass p-2 text-center">
+                  <small class="text-muted">NO₂</small>
+                  <strong>${data.components.no2}</strong>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="card glass p-2 text-center">
+                  <small class="text-muted">SO₂</small>
+                  <strong>${data.components.so2}</strong>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="card glass p-2 text-center">
+                  <small class="text-muted">CO</small>
+                  <strong>${data.components.co}</strong>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="card glass p-2 text-center">
+                  <small class="text-muted">NO</small>
+                  <strong>${data.components.no}</strong>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="card glass p-2 text-center">
+                  <small class="text-muted">NH₃</small>
+                  <strong>${data.components.nh3}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modalEl);
+    const aqiModal = new bootstrap.Modal(modalEl);
+    aqiModal.show();
+    modalEl.addEventListener('hidden.bs.modal', () => modalEl.remove());
+  }
+
   function createCityCard(w) {
     const col = document.createElement('div');
     col.className = 'col-12 col-sm-6 col-md-4';
@@ -332,6 +471,13 @@ document.addEventListener('DOMContentLoaded', () => {
       style="color: ${isFav ? '#ffc107' : '#6c757d'}; text-decoration: none;">
       <i class="fa-solid fa-star${isFav ? '' : '-o'}"></i>
     </button>`;
+    
+    // Air Quality Badge (will be loaded asynchronously)
+    const aqiBadge = w.lat && w.lon 
+      ? `<span class="aqi-badge loading" data-lat="${w.lat}" data-lon="${w.lon}">
+           <i class="fa-solid fa-spinner fa-spin"></i> AQI
+         </span>`
+      : '';
 
     card.innerHTML = `
       <div class="city-card-header">
@@ -343,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${w.city}
                 ${weatherIndicators}
                 ${severityBadge}
+                ${aqiBadge}
                 ${favoriteBtn}
               </h5>
               <div class="text-muted" style="font-size: 0.7rem; line-height: 1.1;">${w.country} • ${w.description}</div>
@@ -424,6 +571,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Load AQI data asynchronously
+    const aqiBadgeEl = card.querySelector('.aqi-badge');
+    if (aqiBadgeEl && w.lat && w.lon) {
+      loadAirQuality(w.lat, w.lon, aqiBadgeEl);
     // Forecast button handler
     const forecastBtn = card.querySelector('.forecast-btn');
     if (forecastBtn) {

@@ -580,6 +580,27 @@ body.dark-mode .dark-mode-toggle {
   color: var(--retro-yellow);
 }
 
+/* AQI Badge */
+.aqi-badge {
+  padding: 0.3rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.7em;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.aqi-badge.loading {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--accent-primary);
+  border: 1.5px solid var(--accent-primary);
+}
+
+.aqi-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 /* Forecast button styling */
 .forecast-btn {
   background: rgba(99, 102, 241, 0.1);

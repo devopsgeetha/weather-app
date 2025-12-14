@@ -99,6 +99,7 @@ def log_request_info():
 # OpenWeatherMap API configuration
 WEATHER_API_KEY = os.getenv('WEATHER_API_KEY', '')
 WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather'
+AIR_QUALITY_API_URL = 'https://api.openweathermap.org/data/2.5/air_pollution'
 FORECAST_API_URL = 'https://api.openweathermap.org/data/2.5/forecast'
 WEATHER_UNITS = 'imperial'  # Fahrenheit by default
 
@@ -339,6 +340,8 @@ def get_weather_data(city_name='', state='', country='', lat=None, lon=None):
         weather_info = {
             'city': data.get('name', city_name if city_name else 'Unknown'),
             'country': data.get('sys', {}).get('country', ''),
+            'lat': data.get('coord', {}).get('lat'),
+            'lon': data.get('coord', {}).get('lon'),
             'temperature': round(data['main']['temp']) if data.get('main') and data['main'].get('temp') is not None else None,
             'feels_like': round(data['main']['feels_like']) if data.get('main') and data['main'].get('feels_like') is not None else None,
             'description': data['weather'][0]['description'].title() if data.get('weather') else '',
@@ -372,6 +375,125 @@ def get_weather_data(city_name='', state='', country='', lat=None, lon=None):
         return {'error': f'Unexpected API response format: Missing key {str(e)}'}
     except Exception as e:
         return {'error': f'An unexpected error occurred: {str(e)}'}
+
+
+def get_air_quality_data(lat, lon):
+    """
+    Fetch air quality data from OpenWeatherMap API.
+    
+    Args:
+        lat: Latitude
+        lon: Longitude
+    
+    Returns:
+        Dict containing air quality information or error
+    """
+    if not WEATHER_API_KEY:
+        return {'error': 'Weather API key not configured'}
+    
+    cache_key = f"aqi:{lat},{lon}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+    
+    params = {
+        'lat': lat,
+        'lon': lon,
+        'appid': WEATHER_API_KEY
+    }
+    
+    try:
+        response = requests.get(AIR_QUALITY_API_URL, params=params, timeout=10)
+        
+        if response.status_code == 401:
+            return {'error': 'Invalid API key'}
+        elif response.status_code == 404:
+            return {'error': 'Location not found'}
+        elif response.status_code == 429:
+            return {'error': 'API rate limit exceeded'}
+        
+        response.raise_for_status()
+        data = response.json()
+        
+        if not data.get('list') or len(data['list']) == 0:
+            return {'error': 'No air quality data available'}
+        
+        aqi_data = data['list'][0]
+        aqi_value = aqi_data.get('main', {}).get('aqi', 0)
+        components = aqi_data.get('components', {})
+        
+        # AQI levels: 1=Good, 2=Fair, 3=Moderate, 4=Poor, 5=Very Poor
+        aqi_labels = {
+            1: 'Good',
+            2: 'Fair',
+            3: 'Moderate',
+            4: 'Poor',
+            5: 'Very Poor'
+        }
+        
+        aqi_descriptions = {
+            1: 'Air quality is satisfactory, and air pollution poses little or no risk.',
+            2: 'Air quality is acceptable. However, there may be a risk for some people.',
+            3: 'Members of sensitive groups may experience health effects.',
+            4: 'Some members of the general public may experience health effects.',
+            5: 'Health alert: The risk of health effects is increased for everyone.'
+        }
+        
+        aqi_info = {
+            'aqi': aqi_value,
+            'aqi_label': aqi_labels.get(aqi_value, 'Unknown'),
+            'aqi_description': aqi_descriptions.get(aqi_value, 'No description available'),
+            'components': {
+                'co': round(components.get('co', 0), 2),  # Carbon monoxide (μg/m3)
+                'no': round(components.get('no', 0), 2),  # Nitrogen monoxide (μg/m3)
+                'no2': round(components.get('no2', 0), 2),  # Nitrogen dioxide (μg/m3)
+                'o3': round(components.get('o3', 0), 2),  # Ozone (μg/m3)
+                'so2': round(components.get('so2', 0), 2),  # Sulphur dioxide (μg/m3)
+                'pm2_5': round(components.get('pm2_5', 0), 2),  # Fine particles (μg/m3)
+                'pm10': round(components.get('pm10', 0), 2),  # Coarse particulate matter (μg/m3)
+                'nh3': round(components.get('nh3', 0), 2)  # Ammonia (μg/m3)
+            }
+        }
+        
+        _cache_set(cache_key, aqi_info)
+        return aqi_info
+        
+    except requests.exceptions.Timeout:
+        return {'error': 'Request timeout'}
+    except requests.exceptions.ConnectionError:
+        return {'error': 'Connection error'}
+    except requests.exceptions.RequestException as e:
+        return {'error': f'Failed to fetch air quality: {str(e)}'}
+    except Exception as e:
+        return {'error': f'Unexpected error: {str(e)}'}
+
+
+@app.route('/api/air-quality', methods=['GET'])
+def get_air_quality():
+    """API endpoint to get air quality index for coordinates"""
+    lat = request.args.get('lat', '').strip()
+    lon = request.args.get('lon', '').strip()
+    
+    if not lat or not lon:
+        return jsonify({'error': 'Latitude and longitude are required'}), 400
+    
+    try:
+        lat_float = float(lat)
+        lon_float = float(lon)
+        
+        if not (-90 <= lat_float <= 90):
+            return jsonify({'error': 'Latitude must be between -90 and 90'}), 400
+        if not (-180 <= lon_float <= 180):
+            return jsonify({'error': 'Longitude must be between -180 and 180'}), 400
+        
+        aqi_data = get_air_quality_data(lat_float, lon_float)
+    except ValueError:
+        return jsonify({'error': 'Invalid latitude or longitude values'}), 400
+    
+    if 'error' in aqi_data:
+        return jsonify(aqi_data), 400
+    
+    return jsonify(aqi_data)
 
 
 @app.route('/')
