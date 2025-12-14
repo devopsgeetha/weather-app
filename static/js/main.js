@@ -575,6 +575,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const aqiBadgeEl = card.querySelector('.aqi-badge');
     if (aqiBadgeEl && w.lat && w.lon) {
       loadAirQuality(w.lat, w.lon, aqiBadgeEl);
+    }
+    
     // Forecast button handler
     const forecastBtn = card.querySelector('.forecast-btn');
     if (forecastBtn) {
