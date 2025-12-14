@@ -99,6 +99,7 @@ def log_request_info():
 # OpenWeatherMap API configuration
 WEATHER_API_KEY = os.getenv('WEATHER_API_KEY', '')
 WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather'
+FORECAST_API_URL = 'https://api.openweathermap.org/data/2.5/forecast'
 WEATHER_UNITS = 'imperial'  # Fahrenheit by default
 
 # Cache configuration (thread-safe simple TTL cache)
@@ -446,6 +447,164 @@ def get_default_cities():
             })
 
     return jsonify(cities_weather)
+
+
+def get_forecast_data(city_name='', state='', country='', lat=None, lon=None):
+    """
+    Fetch 5-day weather forecast from OpenWeatherMap API.
+    
+    Returns a dict containing forecast data or an 'error' key.
+    """
+    if not WEATHER_API_KEY:
+        return {'error': 'Weather API key not configured'}
+    
+    units = WEATHER_UNITS
+    
+    # Build cache key and params
+    if lat is not None and lon is not None:
+        cache_key = f"forecast:coords:{lat},{lon}|{units}"
+        params = {
+            'lat': lat,
+            'lon': lon,
+            'appid': WEATHER_API_KEY,
+            'units': units
+        }
+    else:
+        query_parts = [city_name]
+        if state:
+            query_parts.append(state)
+        if country:
+            query_parts.append(country)
+        
+        query = ','.join(query_parts)
+        cache_key = f"forecast:{query}|{units}"
+        params = {
+            'q': query,
+            'appid': WEATHER_API_KEY,
+            'units': units
+        }
+    
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+    
+    try:
+        response = requests.get(FORECAST_API_URL, params=params, timeout=10)
+        
+        if response.status_code == 401:
+            return {'error': 'Invalid API key'}
+        elif response.status_code == 404:
+            return {'error': 'Location not found'}
+        elif response.status_code == 429:
+            return {'error': 'API rate limit exceeded'}
+        
+        response.raise_for_status()
+        data = response.json()
+        
+        # Process forecast data - group by day and get daily summary
+        daily_forecasts = {}
+        
+        for item in data.get('list', []):
+            dt = datetime.fromtimestamp(item['dt'])
+            date_key = dt.strftime('%Y-%m-%d')
+            
+            if date_key not in daily_forecasts:
+                daily_forecasts[date_key] = {
+                    'date': date_key,
+                    'day_name': dt.strftime('%A'),
+                    'temps': [],
+                    'descriptions': [],
+                    'icons': [],
+                    'humidity': [],
+                    'wind_speed': [],
+                    'pop': []  # Probability of precipitation
+                }
+            
+            daily_forecasts[date_key]['temps'].append(item['main']['temp'])
+            daily_forecasts[date_key]['descriptions'].append(item['weather'][0]['description'])
+            daily_forecasts[date_key]['icons'].append(item['weather'][0]['icon'])
+            daily_forecasts[date_key]['humidity'].append(item['main']['humidity'])
+            daily_forecasts[date_key]['wind_speed'].append(item['wind']['speed'])
+            daily_forecasts[date_key]['pop'].append(item.get('pop', 0) * 100)
+        
+        # Calculate daily averages and select most common icon
+        forecast_list = []
+        for date_key in sorted(daily_forecasts.keys())[:5]:  # 5 days
+            day_data = daily_forecasts[date_key]
+            
+            # Get most common icon (typically midday icon)
+            icon = max(set(day_data['icons']), key=day_data['icons'].count)
+            # Get most common description
+            description = max(set(day_data['descriptions']), key=day_data['descriptions'].count)
+            
+            forecast_list.append({
+                'date': day_data['date'],
+                'day_name': day_data['day_name'],
+                'temp_min': round(min(day_data['temps'])),
+                'temp_max': round(max(day_data['temps'])),
+                'temp_avg': round(sum(day_data['temps']) / len(day_data['temps'])),
+                'description': description.title(),
+                'icon': icon,
+                'humidity': round(sum(day_data['humidity']) / len(day_data['humidity'])),
+                'wind_speed': round(sum(day_data['wind_speed']) / len(day_data['wind_speed']), 1),
+                'precipitation_chance': round(max(day_data['pop']))
+            })
+        
+        forecast_info = {
+            'city': data.get('city', {}).get('name', city_name if city_name else 'Unknown'),
+            'country': data.get('city', {}).get('country', ''),
+            'forecasts': forecast_list
+        }
+        
+        _cache_set(cache_key, forecast_info)
+        return forecast_info
+        
+    except requests.exceptions.Timeout:
+        return {'error': 'Request timeout'}
+    except requests.exceptions.ConnectionError:
+        return {'error': 'Connection error'}
+    except requests.exceptions.RequestException as e:
+        return {'error': f'Failed to fetch forecast: {str(e)}'}
+    except Exception as e:
+        return {'error': f'Unexpected error: {str(e)}'}
+
+
+@app.route('/api/forecast', methods=['GET'])
+def get_forecast():
+    """API endpoint to get 5-day weather forecast"""
+    # Check if using coordinates
+    lat = request.args.get('lat', '').strip()
+    lon = request.args.get('lon', '').strip()
+    
+    if lat and lon:
+        try:
+            lat_float = float(lat)
+            lon_float = float(lon)
+            
+            if not (-90 <= lat_float <= 90):
+                return jsonify({'error': 'Latitude must be between -90 and 90'}), 400
+            if not (-180 <= lon_float <= 180):
+                return jsonify({'error': 'Longitude must be between -180 and 180'}), 400
+            
+            forecast_data = get_forecast_data(lat=lat_float, lon=lon_float)
+        except ValueError:
+            return jsonify({'error': 'Invalid latitude or longitude values'}), 400
+    else:
+        # Use city name
+        city = request.args.get('city', '').strip()
+        state = request.args.get('state', '').strip()
+        country = request.args.get('country', '').strip()
+
+        is_valid, error_msg = validate_city_input(city, state, country)
+        if not is_valid:
+            return jsonify({'error': error_msg}), 400
+
+        forecast_data = get_forecast_data(city, state, country)
+
+    if 'error' in forecast_data:
+        return jsonify(forecast_data), 400
+
+    return jsonify(forecast_data)
 
 
 # Offline page route for service worker fallback

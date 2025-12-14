@@ -402,6 +402,11 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
       </div>
+      <div class="card-footer" style="background: transparent; border-top: 1px solid rgba(99, 102, 241, 0.1); padding-top: 0.75rem;">
+        <button class="btn btn-sm btn-outline-primary w-100 forecast-btn" data-city="${w.city}" data-country="${w.country}">
+          <i class="fa-solid fa-calendar-days"></i> View 5-Day Forecast
+        </button>
+      </div>
     `;
 
     // Favorite button handler
@@ -419,10 +424,118 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    // Forecast button handler
+    const forecastBtn = card.querySelector('.forecast-btn');
+    if (forecastBtn) {
+      forecastBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const city = forecastBtn.dataset.city;
+        const country = forecastBtn.dataset.country;
+        await showForecast(city, country);
+      });
+    }
+
     card.addEventListener('click', () => showDetails(w));
     card.addEventListener('keypress', (e) => { if (e.key === 'Enter') showDetails(w); });
     col.appendChild(card);
     return col;
+  }
+
+  async function showForecast(city, country) {
+    try {
+      showToast('Loading forecast...', 'info');
+      
+      const q = new URL('/api/forecast', window.location.origin);
+      q.searchParams.set('city', city);
+      if (country) q.searchParams.set('country', country);
+      
+      const res = await fetch(q);
+      const data = await res.json();
+      
+      if (!res.ok || data.error) {
+        showToast(data.error || 'Failed to load forecast', 'error');
+        return;
+      }
+      
+      // Convert units if needed
+      const unit = currentUnit();
+      const unitSymbol = unit === 'metric' ? '°C' : '°F';
+      
+      let forecastHtml = '<div class="row g-3">';
+      
+      data.forecasts.forEach(day => {
+        let tempMin = day.temp_min;
+        let tempMax = day.temp_max;
+        
+        if (unit === 'metric') {
+          const convert = (v) => Math.round((v - 32) * 5 / 9);
+          tempMin = convert(tempMin);
+          tempMax = convert(tempMax);
+        }
+        
+        forecastHtml += `
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="card glass p-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <h6 class="mb-0">${day.day_name}</h6>
+                  <small class="text-muted">${day.date}</small>
+                </div>
+                <img src="${iconUrl(day.icon)}" alt="${day.description}" width="50" height="50">
+              </div>
+              <div class="mb-2">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted small">High</span>
+                  <span class="fw-bold" style="color: var(--danger);">${tempMax}${unitSymbol}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted small">Low</span>
+                  <span class="fw-bold" style="color: var(--accent-primary);">${tempMin}${unitSymbol}</span>
+                </div>
+              </div>
+              <div class="small text-muted">${day.description}</div>
+              <div class="mt-2 small">
+                <div class="d-flex justify-content-between">
+                  <span><i class="fa-solid fa-droplet"></i> ${day.precipitation_chance}%</span>
+                  <span><i class="fa-solid fa-wind"></i> ${day.wind_speed} mph</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      forecastHtml += '</div>';
+      
+      // Create forecast modal
+      const modalEl = document.createElement('div');
+      modalEl.className = 'modal fade';
+      modalEl.innerHTML = `
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content glass">
+            <div class="modal-header">
+              <h5 class="modal-title"><i class="fa-solid fa-calendar-days"></i> 5-Day Forecast - ${data.city}, ${data.country}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">${forecastHtml}</div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modalEl);
+      const forecastModal = new bootstrap.Modal(modalEl);
+      forecastModal.show();
+      modalEl.addEventListener('hidden.bs.modal', () => modalEl.remove());
+      
+      showToast(`Forecast loaded for ${data.city}`, 'success');
+      
+    } catch (err) {
+      showToast('Failed to load forecast', 'error');
+      console.error('Forecast error:', err);
+    }
   }
 
   function showDetails(w) {
