@@ -246,35 +246,47 @@ DEFAULT_CITIES = [
 ]
 
 
-def get_weather_data(city_name, state='', country=''):
+def get_weather_data(city_name='', state='', country='', lat=None, lon=None):
     """
     Fetch weather data from OpenWeatherMap API with a thread-safe TTL cache.
+    
+    Can fetch by city name or by coordinates.
 
     Returns a dict containing either weather information or an 'error' key.
     """
     if not WEATHER_API_KEY:
         return {'error': 'Weather API key not configured. Please set WEATHER_API_KEY in .env file'}
 
-    # Build query string
-    query_parts = [city_name]
-    if state:
-        query_parts.append(state)
-    if country:
-        query_parts.append(country)
-
-    query = ','.join(query_parts)
     units = WEATHER_UNITS
+    
+    # Build cache key and params based on query type
+    if lat is not None and lon is not None:
+        cache_key = f"coords:{lat},{lon}|{units}"
+        params = {
+            'lat': lat,
+            'lon': lon,
+            'appid': WEATHER_API_KEY,
+            'units': units
+        }
+    else:
+        # Build query string for city search
+        query_parts = [city_name]
+        if state:
+            query_parts.append(state)
+        if country:
+            query_parts.append(country)
+        
+        query = ','.join(query_parts)
+        cache_key = f"{query}|{units}"
+        params = {
+            'q': query,
+            'appid': WEATHER_API_KEY,
+            'units': units
+        }
 
-    cache_key = f"{query}|{units}"
     cached = _cache_get(cache_key)
     if cached:
         return cached
-
-    params = {
-        'q': query,
-        'appid': WEATHER_API_KEY,
-        'units': units
-    }
 
     try:
         response = requests.get(WEATHER_API_URL, params=params, timeout=10)
@@ -324,7 +336,7 @@ def get_weather_data(city_name, state='', country=''):
 
         # Format the response
         weather_info = {
-            'city': data.get('name', city_name),
+            'city': data.get('name', city_name if city_name else 'Unknown'),
             'country': data.get('sys', {}).get('country', ''),
             'temperature': round(data['main']['temp']) if data.get('main') and data['main'].get('temp') is not None else None,
             'feels_like': round(data['main']['feels_like']) if data.get('main') and data['main'].get('feels_like') is not None else None,
@@ -374,18 +386,38 @@ def index():
 
 @app.route('/api/weather', methods=['GET'])
 def get_weather():
-    """API endpoint to get weather for a specific location"""
-    city = request.args.get('city', '').strip()
-    state = request.args.get('state', '').strip()
-    country = request.args.get('country', '').strip()
+    """API endpoint to get weather for a specific location (by city name or coordinates)"""
+    # Check if using coordinates
+    lat = request.args.get('lat', '').strip()
+    lon = request.args.get('lon', '').strip()
+    
+    if lat and lon:
+        # Validate coordinates
+        try:
+            lat_float = float(lat)
+            lon_float = float(lon)
+            
+            if not (-90 <= lat_float <= 90):
+                return jsonify({'error': 'Latitude must be between -90 and 90'}), 400
+            if not (-180 <= lon_float <= 180):
+                return jsonify({'error': 'Longitude must be between -180 and 180'}), 400
+            
+            weather_data = get_weather_data(lat=lat_float, lon=lon_float)
+        except ValueError:
+            return jsonify({'error': 'Invalid latitude or longitude values'}), 400
+    else:
+        # Use city name
+        city = request.args.get('city', '').strip()
+        state = request.args.get('state', '').strip()
+        country = request.args.get('country', '').strip()
 
-    # Validate input
-    is_valid, error_msg = validate_city_input(city, state, country)
-    if not is_valid:
-        logger.warning(f'Invalid input: {error_msg} for city={city}, state={state}, country={country}')
-        return jsonify({'error': error_msg}), 400
+        # Validate input
+        is_valid, error_msg = validate_city_input(city, state, country)
+        if not is_valid:
+            logger.warning(f'Invalid input: {error_msg} for city={city}, state={state}, country={country}')
+            return jsonify({'error': error_msg}), 400
 
-    weather_data = get_weather_data(city, state, country)
+        weather_data = get_weather_data(city, state, country)
 
     if 'error' in weather_data:
         return jsonify(weather_data), 400

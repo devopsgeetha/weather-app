@@ -15,16 +15,95 @@
   --retro-pink: #ff6b9d;
   --retro-cyan: #4ecdc4;
   --retro-yellow: #ffe66d;
+  --bg-gradient-start: #667eea;
+  --bg-gradient-mid1: #764ba2;
+  --bg-gradient-mid2: #f093fb;
+  --bg-gradient-mid3: #4facfe;
+  --bg-gradient-end: #00f2fe;
+}
+
+/* Dark mode color scheme */
+body.dark-mode {
+  --glass-bg: rgba(30, 41, 59, 0.85);
+  --glass-border: rgba(100, 116, 139, 0.3);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --bg-gradient-start: #1e293b;
+  --bg-gradient-mid1: #334155;
+  --bg-gradient-mid2: #475569;
+  --bg-gradient-mid3: #334155;
+  --bg-gradient-end: #1e293b;
+}
+
+body.dark-mode .hero {
+  background: rgba(30, 41, 59, 0.8);
+  border-bottom: 2px solid rgba(100, 116, 139, 0.3);
+}
+
+body.dark-mode .form-control {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: var(--text-primary);
+}
+
+body.dark-mode .form-control:focus {
+  background: rgba(30, 41, 59, 1);
+  border-color: var(--accent-primary);
+}
+
+body.dark-mode .form-control::placeholder {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .btn-outline-light {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: var(--accent-primary);
+}
+
+body.dark-mode .btn-outline-light:hover {
+  background: var(--accent-primary);
+  color: white;
+}
+
+body.dark-mode #featuredCard {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(30, 41, 59, 0.85));
+  color: var(--text-primary);
+}
+
+body.dark-mode .modal-content.glass {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: var(--accent-secondary);
+}
+
+body.dark-mode .skeleton {
+  background: linear-gradient(90deg, rgba(51, 65, 85, 0.3) 25%, rgba(71, 85, 105, 0.5) 50%, rgba(51, 65, 85, 0.3) 75%);
+  background-size: 200% 100%;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.5);
+}
+
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6 {
+  color: var(--text-primary);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 body {
   min-height: 100vh;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid1) 25%, var(--bg-gradient-mid2) 50%, var(--bg-gradient-mid3) 75%, var(--bg-gradient-end) 100%);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   color: var(--text-primary);
   overflow-x: hidden;
+  transition: background 0.5s ease, color 0.3s ease;
 }
 
 @keyframes gradientShift {
@@ -438,4 +517,65 @@ h6 {
   background: rgba(16, 185, 129, 0.1);
   border-color: var(--success);
   color: var(--success);
+}
+
+/* Geolocation button */
+.btn-location {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.btn-location:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5);
+}
+
+.btn-location:active {
+  transform: translateY(0) scale(0.95);
+}
+
+.btn-location.loading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Dark mode toggle button */
+.dark-mode-toggle {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+}
+
+.dark-mode-toggle:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+}
+
+body.dark-mode .dark-mode-toggle {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: var(--retro-yellow);
 }

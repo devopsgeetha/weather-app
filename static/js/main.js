@@ -39,6 +39,132 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   })();
 
+  // Dark mode functionality
+  const DARK_MODE_KEY = 'weather_app_dark_mode';
+  
+  function isDarkMode() {
+    const saved = localStorage.getItem(DARK_MODE_KEY);
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    // Check system preference
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  
+  function setDarkMode(enabled) {
+    localStorage.setItem(DARK_MODE_KEY, enabled);
+    if (enabled) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+    updateDarkModeIcon(enabled);
+  }
+  
+  function updateDarkModeIcon(isDark) {
+    const darkModeBtn = document.getElementById('darkModeToggle');
+    if (darkModeBtn) {
+      const icon = darkModeBtn.querySelector('i');
+      if (icon) {
+        icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+      }
+    }
+  }
+  
+  // Initialize dark mode
+  (function initDarkMode() {
+    const isDark = isDarkMode();
+    setDarkMode(isDark);
+    
+    const darkModeBtn = document.getElementById('darkModeToggle');
+    if (darkModeBtn) {
+      darkModeBtn.addEventListener('click', () => {
+        const currentlyDark = document.body.classList.contains('dark-mode');
+        setDarkMode(!currentlyDark);
+        showToast(`${!currentlyDark ? 'Dark' : 'Light'} mode enabled`, 'info');
+      });
+    }
+  })();
+  
+  // Geolocation functionality
+  async function getUserLocation() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation not supported by your browser'));
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        position => resolve(position.coords),
+        error => {
+          let message = 'Unable to get your location';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              message = 'Location permission denied. Please enable location access.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              message = 'Location information unavailable.';
+              break;
+            case error.TIMEOUT:
+              message = 'Location request timed out.';
+              break;
+          }
+          reject(new Error(message));
+        },
+        { timeout: 10000, maximumAge: 300000 }
+      );
+    });
+  }
+  
+  async function fetchWeatherByCoords(lat, lon) {
+    const q = new URL('/api/weather', window.location.origin);
+    q.searchParams.set('lat', lat);
+    q.searchParams.set('lon', lon);
+    
+    const res = await fetch(q);
+    const data = await res.json();
+    
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to fetch weather');
+    }
+    
+    return data;
+  }
+  
+  // Geolocation button handler
+  const locationBtn = document.getElementById('locationBtn');
+  if (locationBtn) {
+    locationBtn.addEventListener('click', async () => {
+      locationBtn.classList.add('loading');
+      locationBtn.disabled = true;
+      
+      try {
+        showToast('Getting your location...', 'info');
+        const coords = await getUserLocation();
+        
+        showToast('Fetching weather for your location...', 'info');
+        const data = await fetchWeatherByCoords(coords.latitude, coords.longitude);
+        
+        // Convert units if needed
+        const unit = currentUnit();
+        if (unit === 'metric') {
+          const convert = (v) => (v === null || v === undefined) ? v : Math.round((v - 32) * 5 / 9);
+          if (data.temperature !== null) data.temperature = convert(data.temperature);
+          if (data.feels_like !== null) data.feels_like = convert(data.feels_like);
+        }
+        
+        showToast(`Weather loaded for ${data.city}`, 'success');
+        showDetails(data);
+      } catch (err) {
+        showToast(err.message, 'error');
+        console.error('Geolocation error:', err);
+      } finally {
+        locationBtn.classList.remove('loading');
+        locationBtn.disabled = false;
+      }
+    });
+  }
+
   // Favorite cities feature
   const FAVORITES_KEY = 'weather_app_favorites';
   
@@ -106,6 +232,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
       searchCity.focus();
+    }
+    // Ctrl/Cmd + D to toggle dark mode
+    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+      e.preventDefault();
+      const darkModeBtn = document.getElementById('darkModeToggle');
+      if (darkModeBtn) darkModeBtn.click();
+    }
+    // Ctrl/Cmd + L to trigger geolocation
+    if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+      e.preventDefault();
+      const locationBtn = document.getElementById('locationBtn');
+      if (locationBtn && !locationBtn.disabled) locationBtn.click();
     }
     // Escape to close modal
     if (e.key === 'Escape' && modal._isShown) {
