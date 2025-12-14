@@ -601,4 +601,31 @@ body.dark-mode .dark-mode-toggle {
 .aqi-badge:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+/* Forecast button styling */
+.forecast-btn {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid var(--accent-primary);
+  color: var(--accent-primary);
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+}
+
+.forecast-btn:hover {
+  background: var(--accent-primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+body.dark-mode .forecast-btn {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--accent-primary);
+}
+
+.card-footer {
+  background: transparent !important;
+  border-top: 1px solid rgba(99, 102, 241, 0.1) !important;
+  padding-top: 0.75rem !important;
 }
