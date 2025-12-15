@@ -1,4 +1,4 @@
-# OpenWeatherMap API Key
+# OpenWeatherMap API Key is required to run this app
 # Get your free API key from: https://openweathermap.org/api
 # Copy this file to .env and replace 'your_api_key_here' with your actual API key
 WEATHER_API_KEY=your_api_key_here
